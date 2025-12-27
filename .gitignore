@@ -1,0 +1,22 @@
+# ---------- Python ----------
+__pycache__/
+*.pyc
+.env
+
+# ---------- ML Models ----------
+*.h5
+*.pt
+*.onnx
+
+# ---------- Android ----------
+.gradle/
+build/
+*/build/
+*.apk
+local.properties
+intermediates/
+outputs/
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
