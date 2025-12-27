@@ -1,0 +1,9 @@
+D:\appcopy\machinedignostic\app\src\main\java\com\example\machinedignostic\AudioPreprocessor.kt
+D:\appcopy\machinedignostic\app\src\main\java\com\example\machinedignostic\ui\theme\Theme.kt
+D:\appcopy\machinedignostic\app\src\main\java\com\example\machinedignostic\SpectrogramHelper.kt
+D:\appcopy\machinedignostic\app\src\main\java\com\example\machinedignostic\ui\theme\Color.kt
+D:\appcopy\machinedignostic\app\src\main\java\com\example\machinedignostic\TFLiteClassifier.kt
+D:\appcopy\machinedignostic\app\src\main\java\com\example\machinedignostic\MainActivity.kt
+D:\appcopy\machinedignostic\app\src\main\java\com\example\machinedignostic\AudioHelper.kt
+D:\appcopy\machinedignostic\app\src\main\java\com\example\machinedignostic\ui\theme\Type.kt
+D:\appcopy\machinedignostic\app\src\main\java\com\example\machinedignostic\UpdateManager.kt
