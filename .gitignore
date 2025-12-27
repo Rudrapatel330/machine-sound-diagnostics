@@ -1,20 +1,6 @@
-# Logs & temp
-*.log
-*.txt
-training_state.txt
-debug_*.json
-
-# Android
-**/build/
-**/.gradle/
-**/.idea/
-*.apk
-*.aab
-
-# Python
-__pycache__/
-*.pyc
-
-# ML models (keep only final)
-*.h5
-*.ckpt
+# Ignore Android build folders
+/android_app/app/build*/
+*.iml
+/.gradle
+/local.properties
+/.idea
