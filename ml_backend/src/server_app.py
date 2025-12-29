@@ -12,11 +12,16 @@ app = Flask(__name__)
 # Load Model
 MODEL_PATH = config.MODEL_SAVE_PATH
 # Fallback if model in config doesn't exist but local checks do
+# Fallback if model in config doesn't exist but local checks do
 if not os.path.exists(MODEL_PATH):
     if os.path.exists("model.h5"):
         MODEL_PATH = "model.h5"
     elif os.path.exists("final_model.h5"):
         MODEL_PATH = "final_model.h5"
+    elif os.path.exists("finalminorproject/final_model.h5"):
+        MODEL_PATH = "finalminorproject/final_model.h5"
+    elif os.path.exists("finalminorproject/model.h5"):
+        MODEL_PATH = "finalminorproject/model.h5"
 
 print(f"Loading model from {MODEL_PATH}...")
 try:
@@ -50,8 +55,10 @@ def get_version():
         "force_update": False
     })
 
-@app.route('/predict', methods=['POST'])
-def predict():
+# =======================================================
+# SHARED LOGIC
+# =======================================================
+def run_prediction_logic():
     if model is None:
         return jsonify({"error": "Model not loaded"}), 500
 
@@ -113,6 +120,29 @@ def predict():
                 os.remove(temp_path)
             except Exception as e:
                 print(f"Warning: Could not remove temp file {temp_path}: {e}")
+
+# =======================================================
+# ROUTES
+# =======================================================
+
+@app.route('/predict', methods=['POST'])
+def predict_endpoint():
+    print("DEBUG: /predict Handling Request")
+    return run_prediction_logic()
+
+@app.route('/', methods=['GET', 'POST'])
+def root():
+    print(f"DEBUG: Root Route Request. Method: {request.method}")
+    if request.method == 'POST':
+        # If the App sends data to the root URL, handle it as a prediction!
+        return run_prediction_logic()
+    else:
+        # If accessed via Browser, show status
+        return jsonify({
+            "status": "Running",
+            "message": "Mechanic Fault Detector Server is Online",
+            "usage": "Send POST request to /predict (or this root URL) with 'file' parameter."
+        })
 
 if __name__ == '__main__':
     # Clean up temp file on startup if exists
