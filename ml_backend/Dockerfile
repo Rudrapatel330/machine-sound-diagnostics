@@ -17,12 +17,12 @@ COPY requirements.txt .
 # We pin version numbers to ensure compatibility
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir \
-    flask \
-    tensorflow==2.13.0 \
-    numpy<2.0 \
-    librosa \
-    scikit-learn \
-    gunicorn
+    "flask" \
+    "tensorflow==2.15.0" \
+    "numpy<2.0" \
+    "librosa==0.10.1" \
+    "scikit-learn" \
+    "gunicorn"
 
 # Copy all files
 COPY . .
@@ -35,6 +35,12 @@ ENV HOME=/home/user \
 
 # Expose port (Hugging Face expects 7860)
 EXPOSE 7860
+
+# Add nested folder to Python Path so it can find 'src'
+ENV PYTHONPATH="${PYTHONPATH}:/code/finalminorproject"
+
+# Force Python output to be unbuffered (Crucial for Logs)
+ENV PYTHONUNBUFFERED=1
 
 # Command to run the application using Gunicorn
 CMD ["gunicorn", "-b", "0.0.0.0:7860", "src.server_app:app"]
