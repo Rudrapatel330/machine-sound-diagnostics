@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CINEMATIC SOUND AI | Machine Diagnostics</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- BASE STYLES --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --neon-blue: #00f3ff; --neon-cyan: #0ff; --neon-purple: #bc13fe; --neon-pink: #ff0055; --dark-bg: #050508; --glass-bg: rgba(10, 15, 30, 0.85); --glass-border: rgba(0, 243, 255, 0.3); }
+        body { background: var(--dark-bg); color: white; font-family: 'Rajdhani', sans-serif; min-height: 100vh; overflow-x: hidden; position: relative; }
+        
+        /* --- CANVAS & ANIMATIONS --- */
+        #bgCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%); }
+        .scanlines { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.2) 50%); background-size: 100% 4px; z-index: 9998; pointer-events: none; opacity: 0.6; }
+        h1, h2, h3, .stat-value, .cinematic-logo { font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* --- INTRO SCREEN --- */
+        .cinematic-intro { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh; 
+            background: black; display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; z-index: 99999; 
+            transition: opacity 0.5s ease-out; cursor: pointer;
+        }
+        .cinematic-logo { font-size: 3rem; color: white; text-shadow: 2px 2px 0px var(--neon-purple), -2px -2px 0px var(--neon-blue); margin-bottom: 20px; animation: glitch 1s infinite alternate; }
+        .loader-bar { width: 250px; height: 3px; background: #333; position: relative; overflow: hidden; margin-bottom: 15px; }
+        .loader-progress { position: absolute; height: 100%; width: 0%; background: var(--neon-blue); animation: loadProgress 2.5s ease-out forwards; }
+        .tap-hint { margin-top: 20px; color: #666; font-size: 0.8rem; animation: pulse 1s infinite; }
+        @keyframes loadProgress { 0% { width: 0%; } 100% { width: 100%; } }
+        @keyframes glitch { 0% { text-shadow: 2px 2px 0 var(--neon-purple), -2px -2px 0 var(--neon-blue); } 100% { text-shadow: -2px -2px 0 var(--neon-purple), 2px 2px 0 var(--neon-blue); } }
+        @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+        /* --- MAIN LAYOUT --- */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 10; opacity: 0; animation: fadeIn 1s 1s forwards; }
+        @keyframes fadeIn { to { opacity: 1; } }
+        
+        .main-header { padding: 1.5rem 0; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); margin-bottom: 2rem; }
+        .logo { display: flex; align-items: center; gap: 1rem; }
+        .logo-icon { width: 45px; height: 45px; background: rgba(0,0,0,0.5); border: 1px solid var(--neon-blue); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--neon-blue); box-shadow: 0 0 15px rgba(0, 243, 255, 0.2); }
+        .logo-text h1 { font-size: 1.5rem; background: linear-gradient(90deg, #fff, var(--neon-blue)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        
+        /* --- SETTINGS ICON --- */
+        .settings-btn { background: none; border: none; color: #666; font-size: 1.5rem; cursor: pointer; transition: 0.3s; }
+        .settings-btn:hover { color: var(--neon-blue); transform: rotate(90deg); }
+
+        /* --- CONTENT BOXES --- */
+        .main-content { display: flex; flex-direction: column; gap: 2rem; padding-bottom: 50px; }
+        @media (min-width: 900px) { .main-content { flex-direction: row; } }
+        .upload-section, .results-section { background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 1.5rem; flex: 1; position: relative; border-radius: 8px; }
+        .section-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
+        .section-icon { color: var(--neon-purple); font-size: 1.5rem; }
+
+        /* --- UPLOAD AREA --- */
+        .upload-area { border: 2px dashed rgba(0, 243, 255, 0.4); background: rgba(0,0,0,0.3); padding: 2rem 1rem; text-align: center; position: relative; border-radius: 10px; transition: 0.3s; }
+        #fileInput { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: 50; cursor: pointer; }
+        .upload-icon { font-size: 2.5rem; margin-bottom: 1rem; color: var(--neon-blue); }
+        .browse-btn { background: rgba(0, 243, 255, 0.1); color: var(--neon-blue); border: 1px solid var(--neon-blue); padding: 0.8rem 2rem; font-family: 'Orbitron'; text-transform: uppercase; margin-top: 1rem; pointer-events: none; }
+        .file-info { background: rgba(0, 243, 255, 0.1); border: 1px solid var(--glass-border); padding: 1rem; margin-top: 1rem; display: none; border-radius: 5px; }
+        .analyze-btn { width: 100%; background: var(--neon-purple); color: white; border: none; padding: 1.2rem; font-family: 'Orbitron'; font-weight: bold; text-transform: uppercase; margin-top: 1.5rem; border-radius: 5px; cursor: pointer; transition: 0.2s; }
+        .analyze-btn:disabled { background: #333; opacity: 0.7; }
+        
+        /* --- RESULTS & LOADERS --- */
+        .result-content { display: none; margin-top: 20px; }
+        .result-content.show { display: block; animation: fadeIn 0.5s; }
+        .confidence-meter { background: rgba(0,0,0,0.4); padding: 1rem; border: 1px solid var(--glass-border); margin-bottom: 1rem; border-radius: 5px; }
+        .confidence-bar { height: 8px; background: #333; width: 100%; margin: 0.5rem 0; border-radius: 4px; overflow: hidden; }
+        .confidence-fill { height: 100%; width: 0%; background: var(--neon-blue); transition: width 0.5s ease-out; }
+        .status-faulty .confidence-fill { background: var(--neon-pink); }
+        .loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 60; border-radius: 8px; }
+        .loading-overlay.active { display: flex; }
+        .hex-loader { width: 50px; height: 50px; border: 3px solid var(--neon-blue); border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .error-msg { color: #ff5555; font-size: 0.85rem; margin-top: 10px; display: none; font-weight: bold; }
+
+        /* --- CONFIG PANEL --- */
+        .config-panel {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 20000;
+            display: none; align-items: center; justify-content: center; flex-direction: column;
+        }
+        .config-panel.open { display: flex; }
+        .config-box { width: 90%; max-width: 400px; background: #111; border: 1px solid var(--neon-blue); padding: 20px; border-radius: 10px; }
+        .config-input { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: white; margin: 10px 0; font-family: monospace; }
+        .save-btn { width: 100%; background: var(--neon-blue); color: black; padding: 10px; border: none; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .close-btn { width: 100%; background: #333; color: white; padding: 10px; border: none; cursor: pointer; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+    <canvas id="bgCanvas"></canvas>
+    <div class="scanlines"></div>
+
+    <div class="cinematic-intro" id="cinematicIntro" onclick="skipIntro()">
+        <div class="cinematic-logo">SOUND AI</div>
+        <div class="loader-bar"><div class="loader-progress"></div></div>
+        <div class="system-text" style="color: var(--neon-blue); font-family: monospace;">INITIALIZING...</div>
+        <div class="tap-hint">[ TAP SCREEN TO START ]</div>
+    </div>
+
+    <div class="config-panel" id="configPanel">
+        <div class="config-box">
+            <h3 style="color: var(--neon-blue); margin-bottom: 15px;">SERVER CONFIGURATION</h3>
+            <p style="color: #aaa; font-size: 0.8rem; margin-bottom: 10px;">Enter your Backend API URL:</p>
+            <input type="text" id="apiInput" class="config-input" value="https://rudragamerz-mechanic-fault-detector.hf.space/predict">
+            <button class="save-btn" onclick="saveConfig()">SAVE & RECONNECT</button>
+            <button class="close-btn" onclick="toggleConfig()">CANCEL</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <header class="main-header">
+            <div class="logo">
+                <div class="logo-icon"><i class="fas fa-wave-square"></i></div>
+                <div class="logo-text"><h1>SoundDiagnose</h1><p>Online Interface</p></div>
+            </div>
+            <button class="settings-btn" onclick="toggleConfig()"><i class="fas fa-cog"></i></button>
+        </header>
+
+        <div class="main-content">
+            <div class="upload-section">
+                <div class="section-title"><i class="fas fa-microchip section-icon"></i><h2>Input Source</h2></div>
+                
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="fileInput" accept="audio/*">
+                    <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                    <h3>Drop Audio Here</h3>
+                    <p style="color:#aaa; font-size: 0.8rem; margin-bottom: 10px;">SUPPORTED: .WAV, .MP3</p>
+                    <button class="browse-btn">Select File</button>
+                    <div class="error-msg" id="errorMsg">INVALID FILE TYPE</div>
+                </div>
+                
+                <div class="file-info" id="fileInfo">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+                            <i class="fas fa-file-audio" style="color: var(--neon-blue); flex-shrink: 0;"></i>
+                            <div style="overflow: hidden;"><h4 id="fileName" style="font-family: 'Consolas'; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">file.wav</h4><p id="fileSize" style="font-size: 0.7rem; color: #888;">0 MB</p></div>
+                        </div>
+                        <i class="fas fa-times" id="removeFile" style="color: var(--neon-pink); cursor: pointer; padding: 5px;"></i>
+                    </div>
+                </div>
+                
+                <button class="analyze-btn" id="analyzeBtn" disabled>RUN DIAGNOSTICS</button>
+            </div>
+
+            <div class="results-section">
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="hex-loader"></div>
+                    <div class="loading-text" style="color: var(--neon-blue); letter-spacing: 2px;">PROCESSING</div>
+                </div>
+
+                <div class="section-title"><i class="fas fa-chart-network section-icon"></i><h2>Results</h2></div>
+
+                <div class="result-placeholder" id="resultPlaceholder" style="text-align: center; padding: 2rem; color: #666;">
+                    <i class="fas fa-wave-square" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                    <p>Awaiting Data...</p>
+                </div>
+
+                <div class="result-content" id="resultContent">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="color: #aaa; font-size: 0.9rem;">STATUS</h3>
+                        <div id="statusBadge" style="background: var(--neon-blue); color: black; padding: 4px 12px; font-weight: bold; font-size: 0.8rem; border-radius: 4px;">-</div>
+                    </div>
+
+                    <div class="confidence-meter" id="confidenceMeter">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 5px;">
+                            <span>CONFIDENCE</span><span id="confidenceValue" style="color: var(--neon-blue);">0%</span>
+                        </div>
+                        <div class="confidence-bar"><div class="confidence-fill" id="confidenceFill"></div></div>
+                    </div>
+
+                    <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="color: #888; font-size: 0.9rem;">Class:</span>
+                            <span id="resClass" style="color: white; font-family: monospace;">--</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #888; font-size: 0.9rem;">Score:</span>
+                            <span id="resScore" style="color: var(--neon-cyan); font-family: monospace;">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. DEFAULT API CONFIGURATION ---
+        let API_ENDPOINT = "https://rudragamerz-mechanic-fault-detector.hf.space/predict"; 
+
+        // --- 2. CONFIG PANEL LOGIC ---
+        function toggleConfig() {
+            const panel = document.getElementById('configPanel');
+            panel.classList.toggle('open');
+        }
+        function saveConfig() {
+            const input = document.getElementById('apiInput');
+            API_ENDPOINT = input.value;
+            toggleConfig();
+            alert("API Endpoint Updated to:\n" + API_ENDPOINT);
+        }
+
+        // --- 3. INTRO HANDLING ---
+        const intro = document.getElementById('cinematicIntro');
+        function skipIntro() {
+            intro.style.opacity = '0';
+            setTimeout(() => { intro.style.display = 'none'; }, 500);
+        }
+        setTimeout(skipIntro, 3000);
+
+        // --- 4. CANVAS BACKGROUND ---
+        const canvas = document.getElementById('bgCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
+        function draw() {
+            ctx.fillStyle = 'rgba(0,0,0,0.1)';
+            ctx.fillRect(0, 0, width, height);
+            ctx.fillStyle = '#00f3ff';
+            if(Math.random() > 0.9) ctx.fillRect(Math.random() * width, Math.random() * height, 2, 2);
+            requestAnimationFrame(draw);
+        }
+        draw();
+
+        // --- 5. MAIN LOGIC ---
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const removeFile = document.getElementById('removeFile');
+        const errorMsg = document.getElementById('errorMsg');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const resultPlaceholder = document.getElementById('resultPlaceholder');
+        const resultContent = document.getElementById('resultContent');
+        const confidenceFill = document.getElementById('confidenceFill');
+        const confidenceValue = document.getElementById('confidenceValue');
+        const statusBadge = document.getElementById('statusBadge');
+        const confidenceMeter = document.getElementById('confidenceMeter');
+        const resClass = document.getElementById('resClass');
+        const resScore = document.getElementById('resScore');
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+
+            fileName.textContent = file.name;
+            fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+            
+            errorMsg.style.display = 'none';
+            uploadArea.style.display = 'none';
+            fileInfo.style.display = 'block';
+            analyzeBtn.disabled = false;
+        });
+
+        removeFile.addEventListener('click', () => {
+            fileInput.value = '';
+            fileInfo.style.display = 'none';
+            uploadArea.style.display = 'block';
+            analyzeBtn.disabled = true;
+            resultContent.classList.remove('show');
+            resultPlaceholder.style.display = 'block';
+        });
+
+        analyzeBtn.addEventListener('click', async () => {
+            const file = fileInput.files[0];
+            if(!file) return;
+
+            loadingOverlay.classList.add('active');
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                // Using the dynamic API_ENDPOINT variable
+                const response = await fetch(API_ENDPOINT, { method: 'POST', body: formData });
+                
+                if(!response.ok) throw new Error(`Server Error: ${response.status} (${response.statusText})`);
+                
+                const data = await response.json();
+                
+                // MAPPING DATA
+                const label = data.label || data.prediction || data.class || "Unknown";
+                const score = data.score || data.confidence || 0;
+                
+                const percentage = Math.round(score * 100);
+                const isFaulty = label.toLowerCase().includes('fault') || label.toLowerCase().includes('anomaly') || label.toLowerCase().includes('abnormal');
+
+                loadingOverlay.classList.remove('active');
+                resultPlaceholder.style.display = 'none';
+                resultContent.classList.add('show');
+
+                setTimeout(() => {
+                    confidenceFill.style.width = percentage + '%';
+                    confidenceValue.textContent = percentage + '%';
+                    resClass.textContent = label.toUpperCase();
+                    resScore.textContent = score.toFixed(4);
+
+                    if(isFaulty) {
+                        statusBadge.textContent = "FAULT DETECTED";
+                        statusBadge.style.background = "var(--neon-pink)";
+                        confidenceMeter.classList.add('status-faulty');
+                    } else {
+                        statusBadge.textContent = "NORMAL";
+                        statusBadge.style.background = "var(--neon-blue)";
+                        confidenceMeter.classList.remove('status-faulty');
+                    }
+                }, 100);
+
+            } catch (error) {
+                loadingOverlay.classList.remove('active');
+                
+                // Friendly error message for 404
+                if(error.message.includes("404")) {
+                    alert("CONNECTION FAILED (404)\n\nThe URL '" + API_ENDPOINT + "' does not exist on your server.\n\nUse the Gear Icon (⚙️) to change the endpoint to '/analyze' or '/api/predict'.");
+                } else {
+                    alert("Error: " + error.message);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
