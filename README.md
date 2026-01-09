@@ -2,8 +2,8 @@
 
 **Machine Sound Diagnostics** is a machine fault detection system that analyzes sound recordings to determine if a machine has a fault or not. The project includes a Python-based ML backend and a full Android application that sends `.wav` audio recordings to the backend for analysis.
 
-🌐 **GitHub Repository:**  
-https://github.com/Rudrapatel330/machine-sound-diagnostics.git
+🌐 **website link:**  
+https://machinesounddiagnostics.vercel.app
 
 ---
 
